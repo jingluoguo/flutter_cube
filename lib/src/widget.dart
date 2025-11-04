@@ -6,13 +6,15 @@ import 'scene.dart';
 typedef void SceneCreatedCallback(Scene scene);
 
 class Cube extends StatefulWidget {
-  Cube({
+  const Cube({
     Key? key,
     this.interactive = true,
     this.onSceneCreated,
     this.onObjectCreated,
+    this.disableScale = false,
   }) : super(key: key);
 
+  final bool disableScale;
   final bool interactive;
   final SceneCreatedCallback? onSceneCreated;
   final ObjectCreatedCallback? onObjectCreated;
@@ -27,11 +29,17 @@ class _CubeState extends State<Cube> {
   double? _lastZoom;
 
   void _handleScaleStart(ScaleStartDetails details) {
+    if (widget.disableScale) {
+      return;
+    }
     _lastFocalPoint = details.localFocalPoint;
     _lastZoom = null;
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (widget.disableScale) {
+      return;
+    }
     scene.camera.trackBall(toVector2(_lastFocalPoint), toVector2(details.localFocalPoint), 1.5);
     _lastFocalPoint = details.localFocalPoint;
     if (_lastZoom == null) {
@@ -50,7 +58,7 @@ class _CubeState extends State<Cube> {
       onObjectCreated: widget.onObjectCreated,
     );
     // prevent setState() or markNeedsBuild called during build
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onSceneCreated?.call(scene);
     });
   }
@@ -66,10 +74,10 @@ class _CubeState extends State<Cube> {
       );
       return widget.interactive
           ? GestureDetector(
-              onScaleStart: _handleScaleStart,
-              onScaleUpdate: _handleScaleUpdate,
-              child: customPaint,
-            )
+        onScaleStart: _handleScaleStart,
+        onScaleUpdate: _handleScaleUpdate,
+        child: customPaint,
+      )
           : customPaint;
     });
   }
